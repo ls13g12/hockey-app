@@ -1,7 +1,9 @@
 export default mockedMatches = [
   {
-    match_id: 1,
+    match_id: "testMatchId1",
     opposition: "testOpposition",
+    umpire1: "testUmpire1",
+    umpire2: "testUmpire2",
     start_date_time: "testLastName",
     home_game: true,
     goals_for: 3,

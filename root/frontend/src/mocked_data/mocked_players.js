@@ -1,6 +1,6 @@
 export default mockedPlayers = [
   {
-    player_id: 1,
+    player_id: "testPlayerId1",
     first_name: "testFirstName",
     last_name: "testLastName",
     nickname: "testNickname",
@@ -9,7 +9,7 @@ export default mockedPlayers = [
     created: "2023-03-23T18:25:43.511Z"
   },
   {
-    player_id: 2,
+    player_id: "testPlayerId2",
     first_name: "testFirstName2",
     last_name: "testLastName2",
     nickname: "testNickname2",
