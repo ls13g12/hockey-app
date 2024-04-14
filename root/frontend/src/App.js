@@ -1,32 +1,41 @@
 import { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import * as fs from 'fs';
-const players = JSON.parse(fs.readFileSync('../mocked_data/players.json'));
+import { GetWelcomeMsg } from './helpers/welcome_message';
 
 function App() {
-  const [welcomeMsg, setWelcomeMsg] = useState('No message');
-  console.log(players);
+  const [welcomeMsg, setWelcomeMsg] = useState('');
+
   useEffect(() => {
     const getWelcomeMsg = async () => {
-      const resp = await fetch('http://localhost:3333/hello', {
-        "Content-Type": "application/json"
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        console.log(data);
-        setWelcomeMsg(data.welcome_msg);
-      }
+      const message = await GetWelcomeMsg();
+      setWelcomeMsg(message);
     }
     getWelcomeMsg();
   }, [])
+
+  const welcomeMsgElement = () => {
+    if (welcomeMsg) {
+      return (
+        <p>
+          {welcomeMsg}
+        </p>
+      )
+    } else {
+      return (
+        <p>
+          loading...
+        </p>
+      )
+    }
+  }
 
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          {welcomeMsg}
+          {welcomeMsgElement()}
         </p>
       </header>
     </div>
