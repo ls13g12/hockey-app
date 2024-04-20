@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { GetWelcomeMsg } from './helpers/welcome_message';
+import { GetBackendHealth } from './helpers/backend_healthcheck';
 
 function App() {
-  const [welcomeMsg, setWelcomeMsg] = useState('');
+  const [backendHealthMessage, setBackendHealthMessage] = useState('');
 
   useEffect(() => {
-    const getWelcomeMsg = async () => {
-      const message = await GetWelcomeMsg();
-      setWelcomeMsg(message);
+    const GetBackendHealthMessage = async () => {
+      const message = await GetBackendHealth();
+      setBackendHealthMessage(message);
     }
-    getWelcomeMsg();
+    GetBackendHealthMessage();
   }, [])
 
-  const welcomeMsgElement = () => {
-    if (welcomeMsg) {
+  const healthcheckElement = () => {
+    if (backendHealthMessage) {
       return (
         <p>
-          {welcomeMsg}
+          {backendHealthMessage}
         </p>
       )
     } else {
@@ -35,7 +35,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          {welcomeMsgElement()}
+          {healthcheckElement()}
         </p>
       </header>
     </div>
