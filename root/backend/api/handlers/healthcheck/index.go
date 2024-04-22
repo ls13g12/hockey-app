@@ -7,7 +7,7 @@ import (
 )
 
 
-func Index(w http.ResponseWriter, r *http.Request) {
+func Get(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("got /healthcheck request\n")
 	w.Header().Set("Content-Type", "application/json")
 	payload := struct{
