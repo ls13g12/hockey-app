@@ -10,7 +10,7 @@ import (
 
 
 func AddRoutes(mux *http.ServeMux) {
-	mux.Handle("/healthcheck", middleware.CORSMiddleware(healthcheck.Get))
+	mux.Handle("GET /healthcheck", middleware.CORSMiddleware(healthcheck.Get))
 	mux.Handle("/", http.NotFoundHandler())
 }
 
