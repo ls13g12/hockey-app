@@ -22,21 +22,21 @@ func (rec *ResponseRecorder) Write(body []byte) (int, error) {
 	return rec.ResponseWriter.Write(body)
 }
 
-func HttpLogger(handler http.Handler, logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+func HttpLogger(logger *slog.Logger, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		rec := &ResponseRecorder{
-			ResponseWriter: res,
+			ResponseWriter: w,
 			StatusCode: http.StatusOK,
 		}
-		handler.ServeHTTP(rec, req)
+		next.ServeHTTP(rec, r)
 		duration := time.Since(startTime)
 
 		if rec.StatusCode != http.StatusOK {
 			logger.Error(
 				"Http request",
-				slog.String("method", req.Method),
-				slog.String("path", req.RequestURI),
+				slog.String("method", r.Method),
+				slog.String("path", r.RequestURI),
 				slog.Int("status_code", rec.StatusCode),
 				slog.String("body", string(rec.Body[:])),
 				slog.String("status_text", http.StatusText(rec.StatusCode)),
@@ -47,8 +47,8 @@ func HttpLogger(handler http.Handler, logger *slog.Logger) http.Handler {
 
 		logger.Info(
 			"Http request",
-			slog.String("method", req.Method),
-			slog.String("path", req.RequestURI),
+			slog.String("method", r.Method),
+			slog.String("path", r.RequestURI),
 			slog.Int("status_code", rec.StatusCode),
 			slog.String("status_text", http.StatusText(rec.StatusCode)),
 			slog.Duration("duration", duration),

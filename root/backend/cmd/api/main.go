@@ -7,21 +7,23 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ls13g12/hockey-app/root/backend/api/middleware"
 	"github.com/ls13g12/hockey-app/root/backend/api/router"
 )
 
 
-func NewServer() http.Handler {
+func NewServer(
+	logger *slog.Logger,
+) http.Handler {
 	mux := http.NewServeMux()
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	router.AddRoutes(mux)
-	var handler http.Handler = middleware.HttpLogger(mux, logger)
+
+	router.AddRoutes(mux, logger)
+	var handler http.Handler = mux
 	return handler
 }
 
 func main() {
-		srv := NewServer()
+		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		srv := NewServer(logger)
 	
 		httpServer := &http.Server{
 			Addr:    net.JoinHostPort("localhost", "8080"),

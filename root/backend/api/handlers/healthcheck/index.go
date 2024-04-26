@@ -8,7 +8,6 @@ import (
 
 
 func Get(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got /healthcheck request\n")
 	w.Header().Set("Content-Type", "application/json")
 	payload := struct{
 		Message string `json:"message"`
