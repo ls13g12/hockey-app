@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"os"
 
@@ -11,27 +11,34 @@ import (
 )
 
 
-func NewServer(
-	logger *slog.Logger,
-) http.Handler {
-	mux := http.NewServeMux()
+type config struct {
+	addr string
+}
 
-	router.AddRoutes(mux, logger)
+var cfg config
+
+func NewServer(infoLog *slog.Logger) http.Handler {
+	mux := http.NewServeMux()
+	router.AddRoutes(mux, infoLog)
 	var handler http.Handler = mux
 	return handler
 }
 
 func main() {
-		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-		srv := NewServer(logger)
+		flag.StringVar(&cfg.addr, "addr", ":8080", "HTTP network address")
+		flag.Parse()
+
+		infoLog := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		srv := NewServer(infoLog)
 	
 		httpServer := &http.Server{
-			Addr:    net.JoinHostPort("localhost", "8080"),
+			Addr:    cfg.addr,
 			Handler: srv,
 		}
 	
 		fmt.Printf("listening on %s\n", httpServer.Addr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		err := httpServer.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "error listening and serving: %s\n", err)
 		}
 }
