@@ -2,53 +2,25 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
-
-	"github.com/ls13g12/hockey-app/root/backend/api/router"
+	"github.com/ls13g12/hockey-app/root/backend/api"
 )
 
-
-type config struct {
-	addr string
+type application struct {
+	logger *slog.Logger
 }
 
-var cfg config
-
-func NewServer(infoLog *slog.Logger) http.Handler {
-	mux := http.NewServeMux()
-	router.AddRoutes(mux, infoLog)
-	var handler http.Handler = mux
-	return handler
-}
+var cfg api.Config
 
 func main() {
-		flag.StringVar(&cfg.addr, "addr", ":8080", "HTTP network address")
-		flag.Parse()
+	flag.StringVar(&cfg.Addr, "addr", ":8080", "HTTP network address")
+	flag.Parse()
 
-		infoLog := slog.New(slog.NewTextHandler(os.Stdout, nil))
-		srv := NewServer(infoLog)
-	
-		httpServer := &http.Server{
-			Addr:    cfg.addr,
-			Handler: srv,
-		}
-	
-		fmt.Printf("listening on %s\n", httpServer.Addr)
-		err := httpServer.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "error listening and serving: %s\n", err)
-		}
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	api.NewApiServer(
+		cfg,
+		logger,
+	)
 }
-
-
-
-
-
-
-
-
-
-
