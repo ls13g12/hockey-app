@@ -5,25 +5,30 @@ import (
 	"net/http"
 
 	"github.com/justinas/alice"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Config struct {
 	Addr string
+	Dsn  string
 }
 
 type api struct {
 	logger *slog.Logger
+	dbClient *mongo.Client
 }
 
-func NewApiServer(cfg Config, logger *slog.Logger) {
+func NewApiServer(cfg Config, logger *slog.Logger, dbClient *mongo.Client) {
 	a := &api{
 		logger: logger,
+		dbClient: dbClient,
 	}
 	
 	httpServer := &http.Server{
 		Addr:    cfg.Addr,
 		Handler: a.addRoutes(),
 	}
+
 	a.logger.Info("api server started", slog.String("Addr", cfg.Addr))
 	err := httpServer.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
@@ -36,7 +41,10 @@ func NewApiServer(cfg Config, logger *slog.Logger) {
 func (a *api) addRoutes() http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /healthcheck", healthcheckGet)
+	mux.HandleFunc("GET /healthcheck", a.healthcheckGet)
+
+	mux.HandleFunc("GET /players", a.playersGet)
+
 	mux.HandleFunc("/", notFoundHandler)
 
 	standard := alice.New(a.corsHeaders, a.requestLogger)
