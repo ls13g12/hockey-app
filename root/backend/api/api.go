@@ -15,13 +15,13 @@ type Config struct {
 
 type api struct {
 	logger *slog.Logger
-	dbClient *mongo.Client
+	playerStore PlayerStore
 }
 
 func NewApiServer(cfg Config, logger *slog.Logger, dbClient *mongo.Client) {
 	a := &api{
 		logger: logger,
-		dbClient: dbClient,
+		playerStore: PlayerModel{dbClient: dbClient},
 	}
 	
 	httpServer := &http.Server{

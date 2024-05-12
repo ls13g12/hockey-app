@@ -14,7 +14,7 @@ var cfg api.Config
 
 func main() {
 	flag.StringVar(&cfg.Addr, "addr", ":8080", "HTTP network address")
-	flag.StringVar(&cfg.Dsn, "dsn", "mongodb://localhost:27017/hockeydb", "mongodb connection string")
+	flag.StringVar(&cfg.Dsn, "dsn", "mongodb://localhost:27017/test", "mongodb connection string")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
