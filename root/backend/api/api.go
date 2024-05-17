@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Addr string
 	Dsn  string
+	Mode string
 }
 
 type api struct {
@@ -18,10 +19,10 @@ type api struct {
 	playerStore PlayerStore
 }
 
-func NewApiServer(cfg Config, logger *slog.Logger, dbClient *mongo.Client) {
+func NewApiServer(cfg Config, logger *slog.Logger, db *mongo.Database) {
 	a := &api{
 		logger: logger,
-		playerStore: PlayerModel{dbClient: dbClient},
+		playerStore: PlayerModel{db: db},
 	}
 	
 	httpServer := &http.Server{
