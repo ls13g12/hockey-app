@@ -44,7 +44,11 @@ func (a *api) addRoutes() http.Handler {
 
 	mux.HandleFunc("GET /healthcheck", a.healthcheckGet)
 
-	mux.HandleFunc("GET /players", a.playersGet)
+	mux.HandleFunc("GET /players", a.playerGetAll)
+	mux.HandleFunc("GET /players/{id}", a.playerGet)
+	mux.HandleFunc("CREATE /players", a.playerCreate)
+	mux.HandleFunc("PUT /players", a.playerPut)
+	mux.HandleFunc("DELETE /players/{id}", a.playerDelete)
 
 	mux.HandleFunc("/", notFoundHandler)
 

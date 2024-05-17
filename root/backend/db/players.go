@@ -35,3 +35,49 @@ func AllPlayers(db *mongo.Database) ([]Player, error){
 
 	return players, nil
 }
+
+func GetPlayer(db *mongo.Database, playerID string) (Player, error) {
+	var player Player
+
+	coll := db.Collection("players")
+	filter := bson.D{{Key: "player_id", Value: playerID}}
+	err := coll.FindOne(context.TODO(), filter).Decode(&player)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return player, nil // Return empty player if not found
+		}
+		return player, err
+	}
+
+	return player, nil
+}
+
+func CreatePlayer(db *mongo.Database, player Player) error {
+	coll := db.Collection("players")
+	player.Created = time.Now()
+	_, err := coll.InsertOne(context.TODO(), player)
+	return err
+}
+
+func UpdatePlayer(db *mongo.Database, player Player) error {
+	coll := db.Collection("players")
+	filter := bson.D{{Key: "player_id", Value: player.PlayerID}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "first_name", Value: player.FirstName},
+			{Key: "last_name", Value: player.LastName},
+			{Key: "nickname", Value: player.Nickname},
+			{Key: "home_shirt_number", Value: player.HomeShirtNumber},
+			{Key: "date_of_birth", Value: player.DateOfBirth},
+		}},
+	}
+	_, err := coll.UpdateOne(context.TODO(), filter, update)
+	return err
+}
+
+func DeletePlayer(db *mongo.Database, playerID string) error {
+	coll := db.Collection("players")
+	filter := bson.D{{Key: "player_id", Value: playerID}}
+	_, err := coll.DeleteOne(context.TODO(), filter)
+	return err
+}
