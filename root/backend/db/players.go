@@ -18,10 +18,10 @@ type Player struct {
 	Created          time.Time `bson:"created" json:"created"`
 }
 
-func AllPlayers(dbClient *mongo.Client) ([]Player, error){
+func AllPlayers(db *mongo.Database) ([]Player, error){
 	var players []Player
 
-	coll := dbClient.Database("test").Collection("players") //Set db name to command line flag
+	coll := db.Collection("players") //Set db name to command line flag
 	cursor, err := coll.Find(context.TODO(), bson.D{})
 	if err != nil {
 		return nil, err

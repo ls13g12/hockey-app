@@ -13,11 +13,11 @@ type PlayerStore interface {
 }
 
 type PlayerModel struct {
-	dbClient *mongo.Client
+	db *mongo.Database
 }
 
 func (pm PlayerModel) AllPlayers() ([]db.Player, error) {
-	return db.AllPlayers(pm.dbClient)
+	return db.AllPlayers(pm.db)
 }
 
 func (a *api) playersGet(w http.ResponseWriter, r *http.Request) {
