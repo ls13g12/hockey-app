@@ -10,10 +10,11 @@ import (
 
 type Player struct {
 	PlayerID         string    `bson:"player_id" json:"player_id"`
-	FirstName        string    `bson:"first_name" json:"first_name"`
-	LastName         string    `bson:"last_name" json:"last_name"`
-	Nickname         string    `bson:"nickname" json:"nickname"`
+	FirstName        string    `bson:"first_name" json:"first_name,required"`
+	LastName         string    `bson:"last_name" json:"last_name,required"`
+	Nickname         string    `bson:"nickname" json:"nickname,omitempty"`
 	HomeShirtNumber  int       `bson:"home_shirt_number" json:"home_shirt_number"`
+	AwayShirtNumber  int       `bson:"away_shirt_number" json:"away_shirt_number,omitempty"`
 	DateOfBirth      time.Time `bson:"date_of_birth" json:"date_of_birth"`
 	Created          time.Time `bson:"created" json:"created"`
 }
@@ -24,13 +25,13 @@ func AllPlayers(db *mongo.Database) ([]Player, error){
 	coll := db.Collection("players") //Set db name to command line flag
 	cursor, err := coll.Find(context.TODO(), bson.D{})
 	if err != nil {
-		return nil, err
+		return players, err
 	}
 	defer cursor.Close(context.TODO())
 
 	err = cursor.All(context.TODO(), &players)
 	if err != nil {
-		return nil, err
+		return players, err
 	}
 
 	return players, nil
@@ -43,9 +44,6 @@ func GetPlayer(db *mongo.Database, playerID string) (Player, error) {
 	filter := bson.D{{Key: "player_id", Value: playerID}}
 	err := coll.FindOne(context.TODO(), filter).Decode(&player)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return player, nil // Return empty player if not found
-		}
 		return player, err
 	}
 

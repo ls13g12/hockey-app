@@ -6,6 +6,11 @@ import (
 
 	"github.com/ls13g12/hockey-app/root/backend/db"
 	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/google/uuid"
+)
+
+const (
+	ERR_MISSING_FIRST_AND_LAST_NAME = "First and last name required"
 )
 
 type PlayerStore interface {
@@ -44,15 +49,16 @@ func (a *api) playerGetAll(w http.ResponseWriter, r *http.Request) {
 	var err error
 	w.Header().Set("Content-Type", "application/json")
 
-		players, err := a.playerStore.AllPlayers()
-
+	players, err := a.playerStore.AllPlayers()
 	if err != nil {
-		a.logger.Error("Error %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	jsonData, err := json.Marshal(players)
 	if err != nil {
-		a.logger.Error("Error %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	w.Write(jsonData)
 }
@@ -63,14 +69,15 @@ func (a *api) playerGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	player, err := a.playerStore.GetPlayer(id)
-
 	if err != nil {
-		a.logger.Error("Error %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	jsonData, err := json.Marshal(player)
 	if err != nil {
-		a.logger.Error("Error %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	w.Write(jsonData)
 }
@@ -78,13 +85,18 @@ func (a *api) playerGet(w http.ResponseWriter, r *http.Request) {
 func (a *api) playerCreate(w http.ResponseWriter, r *http.Request) {
 	var player db.Player
 	if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
-			a.logger.Error("Error %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 	}
 
+	player.PlayerID = uuid.NewString()
+
+	if player.FirstName == "" || player.LastName == "" {
+		http.Error(w, ERR_MISSING_FIRST_AND_LAST_NAME, http.StatusBadRequest)
+		return
+	}
+
 	if err := a.playerStore.CreatePlayer(player); err != nil {
-			a.logger.Error("Error %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 	}
@@ -94,8 +106,8 @@ func (a *api) playerCreate(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) playerPut(w http.ResponseWriter, r *http.Request) {
 	var player db.Player
-	if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
-			a.logger.Error("Error %v", err)
+	err := json.NewDecoder(r.Body).Decode(&player)
+	if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 	}

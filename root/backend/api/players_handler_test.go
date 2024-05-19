@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"log/slog"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/ls13g12/hockey-app/root/backend/db"
+	"github.com/ls13g12/hockey-app/root/backend/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,71 +43,141 @@ func (mpm MockedPlayerModel) DeletePlayer(playerID string) error {
 	return mpm.err
 }
 
+func generateMockPlayers(numPlayers int) []db.Player {
+	players := make([]db.Player, numPlayers)
+	for i := 0; i < numPlayers; i++ {
+		players[i] = db.Player{
+			PlayerID:        util.GenerateRandomString(10),
+			FirstName:       util.GenerateRandomString(5),
+			LastName:        util.GenerateRandomString(7),
+			Nickname:        util.GenerateRandomString(4),
+			HomeShirtNumber: rand.Intn(99) + 1,
+			AwayShirtNumber: rand.Intn(99) + 1,
+			DateOfBirth:     util.GenerateRandomDate(),
+			Created:         time.Now(),
+		}
+	}
+	return players
+}
+
+func generateCreatePlayerPayload(
+	firstNameRequired bool,
+	lastNameRequired bool,
+) db.Player {
+	var player db.Player
+
+	if firstNameRequired {
+		player.FirstName = util.GenerateRandomString(5)
+	}
+
+	if lastNameRequired {
+		player.LastName = util.GenerateRandomString(7)
+	}
+	
+	player.Nickname = util.GenerateRandomString(4)
+	player.HomeShirtNumber = rand.Intn(99) + 1
+	player.AwayShirtNumber = rand.Intn(99) + 1
+	player.DateOfBirth = util.GenerateRandomDate()
+	player.Created = time.Now()
+	
+	return player
+}
+
 func TestPlayersGetAll(t *testing.T) {
 
-	mockedPlayers := []db.Player{
+	testcases := []struct{
+		testName 					string
+		mockedPlayers 		[]db.Player
+		wantStatusCode 		int
+	}{
 		{
-			PlayerID: "1",
+			testName: "GetAllPlayers - Success",
+			mockedPlayers: generateMockPlayers(5),
+			wantStatusCode: http.StatusOK,
 		},
 		{
-			PlayerID: "2",
+			testName: "GetAllPlayersEmpty - Success",
+			mockedPlayers: nil,
+			wantStatusCode: http.StatusOK,
 		},
 	}
 
-	testApi := api{
-		logger: nil,
-		playerStore: MockedPlayerModel{players: mockedPlayers},
-	}
-
-	rr := httptest.NewRecorder()
-
-	r, err := http.NewRequest(http.MethodGet, "/players", nil)
-	if err != nil {
-			t.Fatal(err)
-	}
-
-	testApi.playerGetAll(rr, r)
-
-	rs := rr.Result()
-
-	assert.Equal(t, rs.StatusCode, http.StatusOK)
+	for _, tc := range testcases {
+		testApi := api{
+			playerStore: MockedPlayerModel{players: tc.mockedPlayers},
+		}
 	
-	var players []db.Player
-	err = json.Unmarshal(rr.Body.Bytes(), &players)
-
-	assert.Equal(t, len(players), 2)
+		rr := httptest.NewRecorder()
+	
+		r, err := http.NewRequest(http.MethodGet, "/players", nil)
+		if err != nil {
+				t.Fatal(err)
+		}
+	
+		testApi.playerGetAll(rr, r)
+	
+		rs := rr.Result()
+	
+		assert.Equal(t, rs.StatusCode, tc.wantStatusCode)
+		
+		var players []db.Player
+		err = json.Unmarshal(rr.Body.Bytes(), &players)
+	
+		assert.Equal(t, len(players), len(tc.mockedPlayers))
+	}
 }
 
 func TestPlayerCreate(t *testing.T) {
-	newPlayer := db.Player{
-			PlayerID: "3",
-			FirstName: "John",
-			LastName: "Doe",
-			Nickname: "Johnny",
-			HomeShirtNumber: 10,
-			DateOfBirth: time.Now().AddDate(-25, 0, 0),
+	testcases := []struct{
+		testName 					string
+		payload 					db.Player
+		wantStatusCode 		int
+		wantErrorMessage	string
+	}{
+		{
+			testName: "CreateNewPlayer - Success",
+			payload: generateCreatePlayerPayload(true, true),
+			wantStatusCode: http.StatusCreated,
+		},
+		{
+			testName: "CreateNewPlayer - MissingFirstName",
+			payload: generateCreatePlayerPayload(false, true),
+			wantStatusCode: http.StatusBadRequest,
+			wantErrorMessage: ERR_MISSING_FIRST_AND_LAST_NAME,
+		},
+		{
+			testName: "CreateNewPlayer - MissingLastName",
+			payload: generateCreatePlayerPayload(true, false),
+			wantStatusCode: http.StatusBadRequest,
+			wantErrorMessage: ERR_MISSING_FIRST_AND_LAST_NAME,
+		},
 	}
 
-	testApi := api{
-			logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
-			playerStore: MockedPlayerModel{err: nil},
+	for _, tc := range testcases {
+		testApi := api{
+				logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
+				playerStore: MockedPlayerModel{err: nil},
+		}
+
+		rr := httptest.NewRecorder()
+		body, err := json.Marshal(tc.payload)
+		if err != nil {
+				t.Fatal(err)
+		}
+
+		r, err := http.NewRequest(http.MethodPost, "/players", bytes.NewBuffer(body))
+		if err != nil {
+				t.Fatal(err)
+		}
+
+		testApi.playerCreate(rr, r)
+
+		rs := rr.Result()
+		assert.Equal(t, rs.StatusCode, tc.wantStatusCode)
+		if rs.StatusCode > 299 {
+			assert.Equal(t, strings.TrimSpace(rr.Body.String()), tc.wantErrorMessage)
+		}
 	}
-
-	rr := httptest.NewRecorder()
-	body, err := json.Marshal(newPlayer)
-	if err != nil {
-			t.Fatal(err)
-	}
-
-	r, err := http.NewRequest(http.MethodPost, "/players", bytes.NewBuffer(body))
-	if err != nil {
-			t.Fatal(err)
-	}
-
-	testApi.playerCreate(rr, r)
-
-	rs := rr.Result()
-	assert.Equal(t, rs.StatusCode, http.StatusCreated)
 }
 
 func TestPlayerUpdate(t *testing.T) {
