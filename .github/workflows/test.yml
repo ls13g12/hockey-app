@@ -22,8 +22,9 @@ jobs:
         go-version: '1.22'
 
     - name: Get dependencies
+      working-directory: root/backend
       run: go mod tidy
 
     - name: Test
-      working-directory: root/backend/
+      working-directory: root/backend
       run: go test -v ./...
