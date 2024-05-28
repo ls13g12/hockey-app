@@ -33,7 +33,7 @@ func (a *api) requestLogger(next http.Handler) http.Handler {
 		next.ServeHTTP(rec, r)
 		duration := time.Since(startTime)
 
-		if rec.StatusCode != http.StatusOK {
+		if rec.StatusCode > 299 {
 			a.logger.Error(
 				"request",
 				slog.String("method", r.Method),
