@@ -50,15 +50,18 @@ func (a *api) addRoutes() http.Handler {
 	mux.HandleFunc("GET /healthcheck", a.healthcheckGet)
 
 	dynamic := alice.New(a.sessionManager.LoadAndSave)
+	protected := dynamic.Append(a.isAuthenticated)
 
 	mux.Handle("POST /user/login", dynamic.ThenFunc(a.userLogin))
 	mux.Handle("POST /user/signup", dynamic.ThenFunc(a.userSignup))
 
-	mux.HandleFunc("GET /players", a.playerGetAll)
-	mux.HandleFunc("GET /players/{id}", a.playerGet)
-	mux.Handle("CREATE /players", dynamic.ThenFunc(a.playerCreate))
-	mux.Handle("PUT /players", dynamic.ThenFunc(a.playerPut))
-	mux.Handle("DELETE /players/{id}", dynamic.ThenFunc(a.playerDelete))
+	mux.Handle("/user/logout", protected.ThenFunc(a.userLogout))
+
+	mux.Handle("GET /players", dynamic.ThenFunc(a.playerGetAll))
+	mux.Handle("GET /players/{id}", dynamic.ThenFunc(a.playerGet))
+	mux.Handle("CREATE /players", protected.ThenFunc(a.playerCreate))
+	mux.Handle("PUT /players", protected.ThenFunc(a.playerPut))
+	mux.Handle("DELETE /players/{id}", protected.ThenFunc(a.playerDelete))
 
 	mux.HandleFunc("/", notFoundHandler)
 

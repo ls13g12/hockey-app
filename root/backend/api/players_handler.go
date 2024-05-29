@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/ls13g12/hockey-app/root/backend/db"
 	"go.mongodb.org/mongo-driver/mongo"
-	"github.com/google/uuid"
 )
 
 const (
@@ -60,6 +60,7 @@ func (a *api) playerGetAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Write(jsonData)
 }
 

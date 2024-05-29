@@ -25,10 +25,9 @@ type UserDTO struct {
 
 type UserStore interface {
 	Exists(email string) (bool, error)
+	Authenticate(email string, password string) (string, error)
 	GetUser(userID string) (db.User, error)
 	CreateUser(user db.User) error
-	// UpdateUser(user db.User) error
-	// DeleteUser(userID string) error
 }
 
 type UserModel struct {
@@ -39,6 +38,10 @@ func (um UserModel) Exists(email string) (bool, error) {
 	return db.Exists(um.db, email)
 }
 
+func (um UserModel) Authenticate(email string, password string) (string, error) {
+	return db.Authenticate(um.db, email, password)
+}
+
 func (um UserModel) GetUser(userID string) (db.User, error) {
 	return db.GetUser(um.db, userID)
 }
@@ -47,61 +50,34 @@ func (um UserModel) CreateUser(user db.User) error {
 	return db.CreateUser(um.db, user)
 }
 
-// func (um UserModel) UpdateUser(user db.User) error {
-// 	return db.UpdateUser(um.db, user)
-// }
-
-// func (um UserModel) DeleteUser(userID string) error {
-// 	return db.DeleteUser(um.db, userID)
-// }
-
-
-// func (a *api) userGet(w http.ResponseWriter, r *http.Request) {
-// 	id := r.PathValue("id")
-// 	var err error
-// 	w.Header().Set("Content-Type", "application/json")
-
-// 	user, err := a.userStore.GetUser(id)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	jsonData, err := json.Marshal(user)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	w.Write(jsonData)
-// }
-
-// func Authenticate(db *mongo.Database, user User) error {
-// 	coll := db.Collection("users")
-
-// 	err = CheckPasswordHash(existingUser.HashedPassword, user.Password)
-// 	return err
-// }
 
 func (a *api) userLogin(w http.ResponseWriter, r *http.Request) {
-	var user db.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	var userDTO UserDTO
+	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// err := a.userStore.Authenticate(user)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
-	// 	return
-	// }
+	userID, err := a.userStore.Authenticate(userDTO.Email, userDTO.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
-	// err = a.sessionManager.RenewToken(r.Context())
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	err = a.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	a.sessionManager.Put(r.Context(), "authenticatedUserID", user.UserID)
+	a.sessionManager.Put(r.Context(), "authenticatedUserID", userID)
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (a *api) userLogout(w http.ResponseWriter, r *http.Request) {
+
+	a.sessionManager.Remove(r.Context(), "authenticatedUserID")
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -159,32 +135,3 @@ func (a *api) userSignup(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
-
-// func (a *api) userPut(w http.ResponseWriter, r *http.Request) {
-// 	var user db.User
-// 	err := json.NewDecoder(r.Body).Decode(&user)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	if err := a.userStore.UpdateUser(user); err != nil {
-// 		a.logger.Error("Error %v", err)
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// }
-
-// func (a *api) userDelete(w http.ResponseWriter, r *http.Request) {
-// 	id := r.PathValue("id")
-
-// 	if err := a.userStore.DeleteUser(id); err != nil {
-// 		a.logger.Error("Error %v", err)
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// }

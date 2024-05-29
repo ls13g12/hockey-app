@@ -72,3 +72,15 @@ func (a *api) corsHeaders(next http.Handler) http.Handler {
 	  next.ServeHTTP(w, r)
 	})
 }
+
+func (a *api) isAuthenticated(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if !a.sessionManager.Exists(r.Context(), "authenticatedUserID") {
+			http.Error(w, "Not Authorised", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

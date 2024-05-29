@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/alexedwards/scs/mongodbstore v0.0.0-20240316134038-7e11d57e8885 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
