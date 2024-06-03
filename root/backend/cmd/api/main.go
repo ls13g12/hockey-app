@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mongodbstore"
+	"github.com/alexedwards/scs/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/ls13g12/hockey-app/root/backend/api"
@@ -30,14 +33,24 @@ func main() {
 		logger.Error("error connecting to db")
 	}
 
-	var db *mongo.Database = dbClient.Database("test")
+	var db *mongo.Database 
 	if cfg.Mode == "prod" {
 		db = dbClient.Database("hockeydb")
-	} 
+	} else {
+		db = dbClient.Database("test")
+	}
+
+	sessionManager := scs.New()
+	sessionManager.Store = mongodbstore.New(db)
+	sessionManager.Lifetime = 1 * time.Hour
+	// sessionManager.Cookie.Persist = true
+	// sessionManager.Cookie.SameSite = http.SameSiteLaxMode
+	// sessionManager.Cookie.Secure = false
 
 	api.NewApiServer(
 		cfg,
 		logger,
 		db,
+		sessionManager,
 	)
 }

@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/justinas/alice"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -15,14 +16,18 @@ type Config struct {
 }
 
 type api struct {
-	logger *slog.Logger
-	playerStore PlayerStore
+	logger 					*slog.Logger
+	playerStore 		PlayerStore
+	userStore				UserStore
+	sessionManager 	*scs.SessionManager
 }
 
-func NewApiServer(cfg Config, logger *slog.Logger, db *mongo.Database) {
+func NewApiServer(cfg Config, logger *slog.Logger, db *mongo.Database, sm *scs.SessionManager) {
 	a := &api{
 		logger: logger,
 		playerStore: PlayerModel{db: db},
+		userStore: UserModel{db: db},
+		sessionManager: sm,
 	}
 	
 	httpServer := &http.Server{
@@ -44,11 +49,19 @@ func (a *api) addRoutes() http.Handler {
 
 	mux.HandleFunc("GET /healthcheck", a.healthcheckGet)
 
-	mux.HandleFunc("GET /players", a.playerGetAll)
-	mux.HandleFunc("GET /players/{id}", a.playerGet)
-	mux.HandleFunc("CREATE /players", a.playerCreate)
-	mux.HandleFunc("PUT /players", a.playerPut)
-	mux.HandleFunc("DELETE /players/{id}", a.playerDelete)
+	dynamic := alice.New(a.sessionManager.LoadAndSave)
+	protected := dynamic.Append(a.isAuthenticated)
+
+	mux.Handle("POST /user/login", dynamic.ThenFunc(a.userLogin))
+	mux.Handle("POST /user/signup", dynamic.ThenFunc(a.userSignup))
+
+	mux.Handle("/user/logout", protected.ThenFunc(a.userLogout))
+
+	mux.Handle("GET /players", dynamic.ThenFunc(a.playerGetAll))
+	mux.Handle("GET /players/{id}", dynamic.ThenFunc(a.playerGet))
+	mux.Handle("CREATE /players", protected.ThenFunc(a.playerCreate))
+	mux.Handle("PUT /players", protected.ThenFunc(a.playerPut))
+	mux.Handle("DELETE /players/{id}", protected.ThenFunc(a.playerDelete))
 
 	mux.HandleFunc("/", notFoundHandler)
 
