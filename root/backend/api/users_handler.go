@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/ls13g12/hockey-app/root/backend/db"
@@ -17,7 +18,7 @@ const (
 	ERR_EMAIL_ALREADY_EXISTS = "Email already exists"
 )
 
-type UserDTO struct {
+type CreateUserRequest struct {
 	Username  string    `json:"username,required"`
 	Email     string    `json:"email,required"`
 	Password  string    `json:"password,required"`
@@ -50,9 +51,14 @@ func (um UserModel) CreateUser(user db.User) error {
 	return db.CreateUser(um.db, user)
 }
 
+type loginUserResponse struct {
+	AccessToken 					string       `json:"access_token"`
+	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
+}
+
 
 func (a *api) userLogin(w http.ResponseWriter, r *http.Request) {
-	var userDTO UserDTO
+	var userDTO CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -64,26 +70,25 @@ func (a *api) userLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.sessionManager.RenewToken(r.Context())
+	accessToken, accessPayload, err := a.tokenMaker.CreateToken(userID, "admin", time.Hour)
+
+	resp := &loginUserResponse{
+		AccessToken: accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+	}
+
+	jsonData, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	a.sessionManager.Put(r.Context(), "authenticatedUserID", userID)
-
-	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
 }
 
-func (a *api) userLogout(w http.ResponseWriter, r *http.Request) {
-
-	a.sessionManager.Remove(r.Context(), "authenticatedUserID")
-
-	w.WriteHeader(http.StatusOK)
-}
 
 func (a *api) userSignup(w http.ResponseWriter, r *http.Request) {
-	var userDTO UserDTO
+	var userDTO CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userDTO ); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -126,7 +131,6 @@ func (a *api) userSignup(w http.ResponseWriter, r *http.Request) {
 		Email: userDTO.Email,
 		HashedPassword: string(hashedPasswordBytes),
 	}
-
 
 	if err := a.userStore.CreateUser(user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

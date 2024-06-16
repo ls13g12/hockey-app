@@ -6,25 +6,25 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/justinas/alice"
+	"github.com/ls13g12/hockey-app/root/backend/token"
+	"github.com/ls13g12/hockey-app/root/backend/util"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Config struct {
-	Addr string
-	Dsn  string
-	Mode string
-}
+
 
 type api struct {
 	logger 					*slog.Logger
+	tokenMaker 			token.Maker
 	playerStore 		PlayerStore
 	userStore				UserStore
 	sessionManager 	*scs.SessionManager
 }
 
-func NewApiServer(cfg Config, logger *slog.Logger, db *mongo.Database, sm *scs.SessionManager) {
+func NewApiServer(cfg util.Config, logger *slog.Logger, tokenMaker token.Maker, db *mongo.Database, sm *scs.SessionManager) {
 	a := &api{
 		logger: logger,
+		tokenMaker: tokenMaker,
 		playerStore: PlayerModel{db: db},
 		userStore: UserModel{db: db},
 		sessionManager: sm,
@@ -54,8 +54,6 @@ func (a *api) addRoutes() http.Handler {
 
 	mux.Handle("POST /user/login", dynamic.ThenFunc(a.userLogin))
 	mux.Handle("POST /user/signup", dynamic.ThenFunc(a.userSignup))
-
-	mux.Handle("/user/logout", protected.ThenFunc(a.userLogout))
 
 	mux.Handle("GET /players", dynamic.ThenFunc(a.playerGetAll))
 	mux.Handle("GET /players/{id}", dynamic.ThenFunc(a.playerGet))
