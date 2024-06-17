@@ -1,9 +1,0 @@
-services:
-  mongodb:
-    image: mongo:6
-    container_name: mongodb
-    ports:
-    - '27017:27017'
-    volumes:
-      - ./tmp/data:/data/db
-      - ./scripts/mongo:/docker-entrypoint-initdb.d
