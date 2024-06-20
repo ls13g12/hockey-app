@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"encoding/json"
@@ -46,11 +46,11 @@ func (pm PlayerModel) DeletePlayer(playerID string) error {
 	return db.DeletePlayer(pm.db, playerID)
 }
 
-func (a *api) playerGetAll(w http.ResponseWriter, r *http.Request) {
+func (s *server) playerGetAll(w http.ResponseWriter, r *http.Request) {
 	var err error
 	w.Header().Set("Content-Type", "application/json")
 
-	players, err := a.playerStore.AllPlayers()
+	players, err := s.playerStore.AllPlayers()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -65,12 +65,12 @@ func (a *api) playerGetAll(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-func (a *api) playerGet(w http.ResponseWriter, r *http.Request) {
+func (s *server) playerGet(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var err error
 	w.Header().Set("Content-Type", "application/json")
 
-	player, err := a.playerStore.GetPlayer(id)
+	player, err := s.playerStore.GetPlayer(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -84,7 +84,7 @@ func (a *api) playerGet(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-func (a *api) playerCreate(w http.ResponseWriter, r *http.Request) {
+func (s *server) playerCreate(w http.ResponseWriter, r *http.Request) {
 	var player db.Player
 	if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -98,7 +98,7 @@ func (a *api) playerCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.playerStore.CreatePlayer(player); err != nil {
+	if err := s.playerStore.CreatePlayer(player); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +106,7 @@ func (a *api) playerCreate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (a *api) playerPut(w http.ResponseWriter, r *http.Request) {
+func (s *server) playerPut(w http.ResponseWriter, r *http.Request) {
 	var player db.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
@@ -114,8 +114,8 @@ func (a *api) playerPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.playerStore.UpdatePlayer(player); err != nil {
-		a.logger.Error("Error %v", err)
+	if err := s.playerStore.UpdatePlayer(player); err != nil {
+		s.logger.Error("Error %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -123,11 +123,11 @@ func (a *api) playerPut(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *api) playerDelete(w http.ResponseWriter, r *http.Request) {
+func (s *server) playerDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	if err := a.playerStore.DeletePlayer(id); err != nil {
-		a.logger.Error("Error %v", err)
+	if err := s.playerStore.DeletePlayer(id); err != nil {
+		s.logger.Error("Error %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

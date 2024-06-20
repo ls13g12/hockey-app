@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"encoding/json"
@@ -57,20 +57,20 @@ type loginUserResponse struct {
 	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
 }
 
-func (a *api) userLogin(w http.ResponseWriter, r *http.Request) {
+func (s *server) userLogin(w http.ResponseWriter, r *http.Request) {
 	var userDTO CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	userID, err := a.userStore.Authenticate(userDTO.Email, userDTO.Password)
+	userID, err := s.userStore.Authenticate(userDTO.Email, userDTO.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	accessToken, accessPayload, err := a.tokenMaker.CreateToken(userID, "admin", time.Hour)
+	accessToken, accessPayload, err := s.tokenMaker.CreateToken(userID, "admin", time.Hour)
 
 	resp := &loginUserResponse{
 		AccessToken:          accessToken,
@@ -86,7 +86,7 @@ func (a *api) userLogin(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-func (a *api) userSignup(w http.ResponseWriter, r *http.Request) {
+func (s *server) userSignup(w http.ResponseWriter, r *http.Request) {
 	var userDTO CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -108,7 +108,7 @@ func (a *api) userSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userExists, err := a.userStore.Exists(userDTO.Email)
+	userExists, err := s.userStore.Exists(userDTO.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -131,7 +131,7 @@ func (a *api) userSignup(w http.ResponseWriter, r *http.Request) {
 		HashedPassword: string(hashedPasswordBytes),
 	}
 
-	if err := a.userStore.CreateUser(user); err != nil {
+	if err := s.userStore.CreateUser(user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

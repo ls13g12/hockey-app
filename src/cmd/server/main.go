@@ -13,13 +13,13 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/ls13g12/hockey-app/src/pkg/api"
+	"github.com/ls13g12/hockey-app/src/pkg/server"
 	"github.com/ls13g12/hockey-app/src/pkg/common"
 	"github.com/ls13g12/hockey-app/src/pkg/db"
 	"github.com/ls13g12/hockey-app/src/pkg/token"
 )
 
-var cfg common.Config
+var cfg common.ServerConfig
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -71,7 +71,7 @@ func main() {
 	// sessionManager.Cookie.SameSite = http.SameSiteLaxMode
 	// sessionManager.Cookie.Secure = false
 
-	api.NewApiServer(
+	server.NewServer(
 		cfg,
 		logger,
 		tokenMaker,

@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"encoding/json"
@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-func (a *api) healthcheckGet(w http.ResponseWriter, r *http.Request) {
+func (s *server) healthcheckGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	payload := struct{
+	payload := struct {
 		Message string `json:"message"`
 	}{
 		Message: "ok",

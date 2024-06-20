@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"bytes"
@@ -104,7 +104,7 @@ func TestPlayersGetAll(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		testApi := api{
+		testApi := server{
 			playerStore: MockedPlayerModel{players: tc.mockedPlayers},
 		}
 
@@ -155,7 +155,7 @@ func TestPlayerCreate(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		testApi := api{
+		testApi := server{
 			logger:      slog.New(slog.NewTextHandler(os.Stdout, nil)),
 			playerStore: MockedPlayerModel{err: nil},
 		}
@@ -191,7 +191,7 @@ func TestPlayerUpdate(t *testing.T) {
 		DateOfBirth:     time.Now().AddDate(-22, 0, 0),
 	}
 
-	testApi := api{
+	testApi := server{
 		logger:      nil,
 		playerStore: MockedPlayerModel{err: nil},
 	}
@@ -214,7 +214,7 @@ func TestPlayerUpdate(t *testing.T) {
 }
 
 func TestPlayerDelete(t *testing.T) {
-	testApi := api{
+	testApi := server{
 		logger:      nil,
 		playerStore: MockedPlayerModel{err: nil},
 	}
