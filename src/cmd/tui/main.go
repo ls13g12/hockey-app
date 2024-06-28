@@ -29,7 +29,9 @@ func main() {
 	dbClient, err := db.InitDB(cfg.Dsn)
 	if err != nil {
 		logger.Error("error connecting to db", slog.Any("Error", err))
+		panic(err)
 	}
+	logger.Info("successfully connected to db")
 
 	var db *mongo.Database
 	if cfg.Mode == "prod" {
@@ -37,7 +39,6 @@ func main() {
 	} else {
 		db = dbClient.Database("test")
 	}
-
 
 	tui.NewTuiApp(
 		cfg,
