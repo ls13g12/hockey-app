@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,9 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var globalDB *mongo.Database
 
 func NewTuiApp(cfg common.TuiAppConfig, logger *slog.Logger, db *mongo.Database) {
-	p := tea.NewProgram(RootScreen())
+	if err := db.Client().Ping(context.TODO(), nil); err != nil {
+		fmt.Printf("Error pinging db: %v", err)
+		os.Exit(1)
+	} else {
+		globalDB = db
+	}
+
+	p := tea.NewProgram(RootScreen(db), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
@@ -20,13 +29,13 @@ func NewTuiApp(cfg common.TuiAppConfig, logger *slog.Logger, db *mongo.Database)
 }
 
 type rootScreenModel struct {
-	model  tea.Model    // this will hold the current screen model
+	model  tea.Model
 }
 
-func RootScreen() rootScreenModel {
+func RootScreen(db *mongo.Database) rootScreenModel {
 	var rootModel tea.Model
 
-	screen_one := ScreenOne()
+	screen_one := ScreenOne(db)
 	rootModel = &screen_one
 
 	return rootScreenModel{
@@ -35,7 +44,7 @@ func RootScreen() rootScreenModel {
 }
 
 func (m rootScreenModel) Init() tea.Cmd {
-	return m.model.Init()    // rest methods are just wrappers for the model's methods
+	return m.model.Init()
 }
 
 func (m rootScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -46,8 +55,7 @@ func (m rootScreenModel) View() string {
 	return m.model.View()
 }
 
-// this is the switcher which will switch between screens
 func (m rootScreenModel) SwitchScreen(model tea.Model) (tea.Model, tea.Cmd) {
 	m.model = model
-	return m.model, m.model.Init()    // must return .Init() to initialize the screen (and here the magic happens)
+	return m.model, m.model.Init()
 }
