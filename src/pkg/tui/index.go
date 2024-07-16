@@ -14,14 +14,14 @@ import (
 var globalDB *mongo.Database
 
 func NewTuiApp(cfg common.TuiAppConfig, logger *slog.Logger, db *mongo.Database) {
-	if err := db.Client().Ping(context.TODO(), nil); err != nil {
+	err := db.Client().Ping(context.TODO(), nil)
+	if err != nil {
 		fmt.Printf("Error pinging db: %v", err)
 		os.Exit(1)
-	} else {
-		globalDB = db
 	}
+	globalDB = db
 
-	p := tea.NewProgram(RootScreen(db), tea.WithAltScreen())
+	p := tea.NewProgram(RootScreen(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
@@ -32,11 +32,11 @@ type rootScreenModel struct {
 	model  tea.Model
 }
 
-func RootScreen(db *mongo.Database) rootScreenModel {
+func RootScreen() rootScreenModel {
 	var rootModel tea.Model
 
-	screen_one := ScreenOne(db)
-	rootModel = &screen_one
+	homeModel := NewHomeModel()
+	rootModel = &homeModel
 
 	return rootScreenModel{
 			model: rootModel,
