@@ -14,7 +14,6 @@ import (
 
 var cfg common.TuiAppConfig
 
-
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
@@ -23,7 +22,6 @@ func main() {
 	flag.Parse()
 
 	logger.Info(fmt.Sprintf("running app in %s mode", cfg.Mode))
-
 
 	logger.Info("attempting to connect to db")
 	dbClient, err := db.InitDB(cfg.Dsn)
@@ -46,6 +44,3 @@ func main() {
 		db,
 	)
 }
-
-
-

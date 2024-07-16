@@ -9,17 +9,17 @@ import (
 )
 
 type Player struct {
-	PlayerID         string    `bson:"player_id" json:"player_id"`
-	FirstName        string    `bson:"first_name" json:"first_name,required"`
-	LastName         string    `bson:"last_name" json:"last_name,required"`
-	Nickname         string    `bson:"nickname" json:"nickname,omitempty"`
-	HomeShirtNumber  int       `bson:"home_shirt_number" json:"home_shirt_number"`
-	AwayShirtNumber  int       `bson:"away_shirt_number" json:"away_shirt_number,omitempty"`
-	DateOfBirth      time.Time `bson:"date_of_birth" json:"date_of_birth"`
-	Created          time.Time `bson:"created" json:"created"`
+	PlayerID        string    `bson:"player_id" json:"player_id"`
+	FirstName       string    `bson:"first_name" json:"first_name,required"`
+	LastName        string    `bson:"last_name" json:"last_name,required"`
+	Nickname        string    `bson:"nickname" json:"nickname,omitempty"`
+	HomeShirtNumber int       `bson:"home_shirt_number" json:"home_shirt_number"`
+	AwayShirtNumber int       `bson:"away_shirt_number" json:"away_shirt_number,omitempty"`
+	DateOfBirth     time.Time `bson:"date_of_birth" json:"date_of_birth"`
+	Created         time.Time `bson:"created" json:"created"`
 }
 
-func AllPlayers(db *mongo.Database) ([]Player, error){
+func AllPlayers(db *mongo.Database) ([]Player, error) {
 	var players []Player
 
 	coll := db.Collection("players") //Set db name to command line flag

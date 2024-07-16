@@ -11,17 +11,16 @@ import (
 
 const (
 	ERR_EMAIL_ALREADY_EXISTS = "Email already exists"
-	ERR_AUTH_USER_NOT_FOUND = "Authenticated Failed - User not found"
+	ERR_AUTH_USER_NOT_FOUND  = "Authenticated Failed - User not found"
 )
 
 type User struct {
-	UserID    string    `bson:"user_id" json:"user_id"`
-	Username  string    `bson:"username" json:"username,required"`
-	Email     string    `bson:"email" json:"email,required"`
-	HashedPassword  string    `bson:"hashed_password" json:"hashed_password"`
-	Created   time.Time `bson:"created" json:"created"`
+	UserID         string    `bson:"user_id" json:"user_id"`
+	Username       string    `bson:"username" json:"username,required"`
+	Email          string    `bson:"email" json:"email,required"`
+	HashedPassword string    `bson:"hashed_password" json:"hashed_password"`
+	Created        time.Time `bson:"created" json:"created"`
 }
-
 
 func GetUser(db *mongo.Database, userID string) (User, error) {
 	var user User
@@ -74,7 +73,6 @@ func Authenticate(db *mongo.Database, email string, password string) (string, er
 
 	return foundUser.UserID, nil
 }
-
 
 func CreateUser(db *mongo.Database, user User) error {
 	coll := db.Collection("users")

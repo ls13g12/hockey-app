@@ -13,9 +13,9 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/ls13g12/hockey-app/src/pkg/server"
 	"github.com/ls13g12/hockey-app/src/pkg/common"
 	"github.com/ls13g12/hockey-app/src/pkg/db"
+	"github.com/ls13g12/hockey-app/src/pkg/server"
 	"github.com/ls13g12/hockey-app/src/pkg/token"
 )
 
