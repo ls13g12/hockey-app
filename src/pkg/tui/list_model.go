@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	listBox 		 = lipgloss.NewStyle().Height(20).Margin(0, 2, 0, 0).Padding(0, 2, 0, 0).BorderStyle(lipgloss.NormalBorder()).BorderRight(true)
+	listBox      = lipgloss.NewStyle().Height(20).Margin(0, 2, 0, 0).Padding(0, 2, 0, 0).BorderStyle(lipgloss.NormalBorder()).BorderRight(true)
 	headingStyle = lipgloss.NewStyle().Foreground(hotPink)
 	textStyle    = lipgloss.NewStyle().Foreground(darkGray)
 )
@@ -27,22 +27,22 @@ type ListModel interface {
 
 type playerListModel struct {
 	choices []db.Player
-	cursor	int
+	cursor  int
 }
 
 func NewListModel(resource string) playerListModel {
 	switch resource {
-		case "players":
-			players, err := db.AllPlayers(globalDB)
-			if err != nil {
-				panic(err)
-			}
-			return playerListModel{
-				choices: players,
-				cursor: 0,
-			}
-		default:
-			panic("can't create list model")
+	case "players":
+		players, err := db.AllPlayers(globalDB)
+		if err != nil {
+			panic(err)
+		}
+		return playerListModel{
+			choices: players,
+			cursor:  0,
+		}
+	default:
+		panic("can't create list model")
 	}
 
 }
@@ -52,7 +52,7 @@ func (m playerListModel) Init() tea.Cmd {
 }
 
 func (m playerListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -61,11 +61,11 @@ func (m playerListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return RootScreen().SwitchScreen(homeModel)
 		case tea.KeyUp:
 			if m.cursor > 0 {
-					m.cursor--
+				m.cursor--
 			}
 		case tea.KeyDown:
 			if m.cursor < len(m.choices)-1 {
-					m.cursor++
+				m.cursor++
 			}
 		}
 	}
@@ -78,7 +78,7 @@ func (m playerListModel) View() string {
 	for i, choice := range m.choices {
 		cursor := " "
 		if m.cursor == i {
-				cursor = ">"
+			cursor = ">"
 		}
 		list += fmt.Sprintf("%s %s\n", cursor, fmt.Sprintf("%s %s", choice.FirstName, choice.LastName))
 	}

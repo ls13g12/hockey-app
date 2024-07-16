@@ -10,9 +10,9 @@ import (
 
 // PasetoMaker is a PASETO token maker
 type PasetoMaker struct {
-	paseto       *paseto.V2
-	privateKey  ed25519.PrivateKey
-	publicKey   ed25519.PublicKey
+	paseto     *paseto.V2
+	privateKey ed25519.PrivateKey
+	publicKey  ed25519.PublicKey
 }
 
 // NewPasetoMaker creates a new PasetoMaker
@@ -25,9 +25,9 @@ func NewPasetoMaker(privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey) 
 	}
 
 	maker := &PasetoMaker{
-		paseto:       paseto.NewV2(),
-		privateKey: 	privateKey,
-		publicKey: 		publicKey,
+		paseto:     paseto.NewV2(),
+		privateKey: privateKey,
+		publicKey:  publicKey,
 	}
 
 	return maker, nil

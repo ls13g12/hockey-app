@@ -29,7 +29,7 @@ func NewTuiApp(cfg common.TuiAppConfig, logger *slog.Logger, db *mongo.Database)
 }
 
 type rootScreenModel struct {
-	model  tea.Model
+	model tea.Model
 }
 
 func RootScreen() rootScreenModel {
@@ -39,7 +39,7 @@ func RootScreen() rootScreenModel {
 	rootModel = &homeModel
 
 	return rootScreenModel{
-			model: rootModel,
+		model: rootModel,
 	}
 }
 
