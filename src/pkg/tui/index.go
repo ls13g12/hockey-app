@@ -35,7 +35,7 @@ type rootScreenModel struct {
 func RootScreen() rootScreenModel {
 	var rootModel tea.Model
 
-	homeModel := NewHomeModel()
+	homeModel := NewHomeModel("Welcome!")
 	rootModel = &homeModel
 
 	return rootScreenModel{

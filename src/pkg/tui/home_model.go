@@ -7,7 +7,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+var (
+	notificationBox      = lipgloss.NewStyle().Width(80).Padding(0, 2).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true)
+)
+
 type homeModel struct {
+	notificationMessage string
 	choices          []choice
 	resourceCursor   int
 	resourceSelected bool
@@ -19,13 +24,21 @@ type choice struct {
 	actions  []string
 }
 
-func NewHomeModel() homeModel {
+type CustomTeaModel interface {
+	Init() tea.Cmd
+	View() string
+	Update(msg tea.Msg) (tea.Model, tea.Cmd)
+}
+
+func NewHomeModel(notificationMessage string) homeModel {
 	return homeModel{
+		notificationMessage: notificationMessage,
 		choices: []choice{
 			{
 				resource: "players",
 				actions: []string{
 					"list",
+					"create",
 					"delete",
 					"update",
 				},
@@ -34,6 +47,7 @@ func NewHomeModel() homeModel {
 				resource: "matches",
 				actions: []string{
 					"list",
+					"create",
 					"delete",
 					"update",
 				},
@@ -56,6 +70,7 @@ func (m homeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.Type {
 			case tea.KeyCtrlC:
 				m.resourceSelected = false
+				m.notificationMessage = ""
 
 			case tea.KeyUp:
 				if m.actionCursor > 0 {
@@ -68,11 +83,12 @@ func (m homeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 			case tea.KeyEnter, tea.KeyBackspace:
-				switch m.actionCursor {
-				case 0:
-					playerScreenModel := NewListModel(m.choices[m.resourceCursor].resource)
-					return RootScreen().SwitchScreen(playerScreenModel)
+				newModel, err := NewModel(m.choices[m.resourceCursor].resource, m.choices[m.resourceCursor].actions[m.actionCursor])
+				if err != nil {
+					m.notificationMessage = "Model doesn't exist"
+					return m, nil
 				}
+				return RootScreen().SwitchScreen(newModel)
 			}
 		}
 	} else {
@@ -128,5 +144,18 @@ func (m homeModel) View() string {
 		s += listBox.Render(resourceColumn)
 	}
 
-	return s
+	return lipgloss.JoinVertical(lipgloss.Top, notificationBox.Render(m.notificationMessage), s)
+}
+
+func NewModel(resource string, action string) (CustomTeaModel, error) {
+	switch action {
+	case "list":
+		return NewListModel(resource)
+	case "create":
+		return NewCreateModel(resource)
+	case "delete":
+		return NewDeleteModel(resource)
+	default:
+		return nil, fmt.Errorf("model for %s action not implemented on resource %s", action, resource)
+	}
 }

@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	listBox      = lipgloss.NewStyle().Height(20).Margin(0, 2, 0, 0).Padding(0, 2, 0, 0).BorderStyle(lipgloss.NormalBorder()).BorderRight(true)
+	listBox      = lipgloss.NewStyle().Height(10).Padding(0, 2).BorderStyle(lipgloss.NormalBorder()).BorderRight(true)
 	headingStyle = lipgloss.NewStyle().Foreground(hotPink)
 	textStyle    = lipgloss.NewStyle().Foreground(darkGray)
 )
@@ -30,19 +30,19 @@ type playerListModel struct {
 	cursor  int
 }
 
-func NewListModel(resource string) playerListModel {
+func NewListModel(resource string) (tea.Model, error) {
 	switch resource {
 	case "players":
 		players, err := db.AllPlayers(globalDB)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("error fetching players")
 		}
 		return playerListModel{
 			choices: players,
 			cursor:  0,
-		}
+		}, nil
 	default:
-		panic("can't create list model")
+		return nil, fmt.Errorf("model for list action not implemented on resource %s", resource)
 	}
 
 }
@@ -57,7 +57,7 @@ func (m playerListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
-			homeModel := NewHomeModel()
+			homeModel := NewHomeModel("")
 			return RootScreen().SwitchScreen(homeModel)
 		case tea.KeyUp:
 			if m.cursor > 0 {
@@ -75,6 +75,10 @@ func (m playerListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m playerListModel) View() string {
 	var list string
 
+	if len(m.choices) == 0 {
+		return notificationBox.Render("No players to show")
+	}
+
 	for i, choice := range m.choices {
 		cursor := " "
 		if m.cursor == i {
@@ -85,14 +89,7 @@ func (m playerListModel) View() string {
 
 	player := m.choices[m.cursor]
 
-	displayedPlayer := fmt.Sprintf(
-		`%s %s
-%s %s`,
-		headingStyle.Width(15).Render("First Name"),
-		headingStyle.Width(15).Render("Last Name"),
-		textStyle.Width(15).Render(player.FirstName),
-		textStyle.Width(15).Render(player.LastName),
-	)
+	displayedPlayer := generatePlayerCardString(player)
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, listBox.Render(list), displayedPlayer)
+	return lipgloss.JoinHorizontal(lipgloss.Top, listBox.Render(list), playerBox.Render(displayedPlayer))
 }
