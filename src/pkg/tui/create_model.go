@@ -16,10 +16,6 @@ var (
 	inputStyle    = lipgloss.NewStyle().Foreground(hotPink)
 )
 
-type (
-	errMsg error
-)
-
 type CreateModel interface {
 	Init() tea.Cmd
 	View() string
@@ -128,13 +124,27 @@ func (m *playerCreateModel) prevInput() {
 
 func (m playerCreateModel) View() string {
 	inputPlayerView := fmt.Sprintf(
-`%s  %s
-%s  %s
+`%s %s
+%s%s
+%s
+%s
+%s %s
+%s%s
+%s
+%s
 `,
 		inputStyle.Width(20).Render("First Name"),
 		inputStyle.Width(30).Render("Last Name"),
 		m.inputs[firstName].View(),
 		m.inputs[lastName].View(),
+		inputStyle.Render("Nickname"),
+		m.inputs[nickname].View(),
+		inputStyle.Width(20).Render("Home Number"),
+		inputStyle.Width(20).Render("Away Number"),
+		m.inputs[homeShirtNumber].View(),
+		m.inputs[awayShirtNumber].View(),
+		inputStyle.Render("Date Of Birth (dd/mm/yyyy)"),
+		m.inputs[dateOfBirthString].View(),
 	)
 
 	var confirmMessage string

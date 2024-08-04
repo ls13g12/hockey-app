@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
@@ -14,7 +15,10 @@ import (
 const (
 	firstName = iota
 	lastName
+	nickname
 	homeShirtNumber
+	awayShirtNumber
+	dateOfBirthString
 )
 
 var (
@@ -50,19 +54,43 @@ func generatePlayerCardString(player db.Player) string {
 }
 
 func generatePlayerInputs() ([]textinput.Model, error) {
-	var inputs []textinput.Model = make([]textinput.Model, 2)
+	var inputs []textinput.Model = make([]textinput.Model, 6)
 	inputs[firstName] = textinput.New()
 	inputs[firstName].Focus()
-	inputs[firstName].CharLimit = 20
-	inputs[firstName].Width = 20
 	inputs[firstName].Prompt = ""
+	inputs[firstName].CharLimit = 19
+	inputs[firstName].Width = 20
 	inputs[firstName].Validate = nameValidator
 
 	inputs[lastName] = textinput.New()
+	inputs[lastName].Prompt = ""
 	inputs[lastName].CharLimit = 30
 	inputs[lastName].Width = 30
-	inputs[lastName].Prompt = ""
 	inputs[lastName].Validate = nameValidator
+
+	inputs[nickname] = textinput.New()
+	inputs[nickname].Prompt = ""
+	inputs[nickname].CharLimit = 30
+	inputs[nickname].Width = 30
+	inputs[nickname].Validate = nameValidator
+
+	inputs[homeShirtNumber] = textinput.New()
+	inputs[homeShirtNumber].Prompt = ""
+	inputs[homeShirtNumber].CharLimit = 3
+	inputs[homeShirtNumber].Width = 20
+	inputs[homeShirtNumber].Validate = numberValidator
+
+	inputs[awayShirtNumber] = textinput.New()
+	inputs[awayShirtNumber].Prompt = ""
+	inputs[awayShirtNumber].CharLimit = 3
+	inputs[awayShirtNumber].Width = 30
+	inputs[awayShirtNumber].Validate = numberValidator
+
+	inputs[dateOfBirthString] = textinput.New()
+	inputs[dateOfBirthString].Prompt = ""
+	inputs[dateOfBirthString].CharLimit = 10
+	inputs[dateOfBirthString].Width = 30
+	inputs[dateOfBirthString].Validate = dateValidator
 
 	return inputs, nil
 }
@@ -75,13 +103,70 @@ func nameValidator(s string) error {
 		return fmt.Errorf("names may only contain letters")
 	}
 
-	if len(s) > 10 {
-		return fmt.Errorf("names must be less than 20 characters")
-	}
-
 	if len(s) < 1 {
 		return fmt.Errorf("names cannot be empty")
 	}
 
+	return nil
+}
+
+func numberValidator(s string) error {
+	s = strings.ReplaceAll(s, " ", "")
+
+	num, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+
+	if num < 1 {
+		return fmt.Errorf("number be greater than 0")
+	}
+
+	if num > 999 {
+		return fmt.Errorf("number must be less than 1000")
+	}
+
+	return nil
+}
+
+func dateValidator(s string) error {
+	s = strings.ReplaceAll(s, " ", "")
+
+	parts := strings.Split(s, "/")
+	
+	switch len(parts) {
+	case 1:
+		dd, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return fmt.Errorf("invalid day")
+		}
+		if dd < 0 || dd > 31 {
+			return fmt.Errorf("invalid day")
+		}
+	case 2:
+		if len(parts[1]) == 0 {
+			return nil
+		}
+		mm, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return fmt.Errorf("invalid month")
+		}
+		if mm < 0 || mm > 12 {
+			return fmt.Errorf("invalid month")
+		}
+	case 3:
+		if len(parts[2]) == 0 {
+			return nil
+		}
+		yyyy, err := strconv.Atoi(parts[2])
+		if err != nil {
+			return fmt.Errorf("invalid year")
+		}
+		if yyyy < 0 || yyyy > time.Now().Year() - 10 {
+			return fmt.Errorf("invalid year")
+		}
+	default:
+		return fmt.Errorf("invalid format")
+	}
 	return nil
 }
